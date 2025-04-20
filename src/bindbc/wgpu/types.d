@@ -65,7 +65,7 @@ struct WGPUStringView
     
     string toString()
     {
-        return cast(string)data[0..length];
+        return (data is null || length == 0) ? "" : cast(string)data[0..length];
     }
 }
 
