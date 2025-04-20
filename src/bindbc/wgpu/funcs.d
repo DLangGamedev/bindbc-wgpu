@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019-2024 Timur Gafarov.
+Copyright (c) 2019-2025 Timur Gafarov.
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -34,19 +34,19 @@ import bindbc.wgpu.types2;
 /*
  * Function definitions from webgpu.h
  */
-
 __gshared
 {
     WGPUProcCreateInstance wgpuCreateInstance;
+    WGPUProcGetInstanceCapabilities wgpuGetInstanceCapabilities;
     WGPUProcGetProcAddress wgpuGetProcAddress;
     
     // Methods of Adapter
-    WGPUProcAdapterEnumerateFeatures wgpuAdapterEnumerateFeatures;
-    WGPUProcAdapterGetLimits wgpuAdapterGetLimits;
+    WGPUProcAdapterGetFeatures wgpuAdapterGetFeatures;
     WGPUProcAdapterGetInfo wgpuAdapterGetInfo;
+    WGPUProcAdapterGetLimits wgpuAdapterGetLimits;
     WGPUProcAdapterHasFeature wgpuAdapterHasFeature;
     WGPUProcAdapterRequestDevice wgpuAdapterRequestDevice;
-    WGPUProcAdapterReference wgpuAdapterReference;
+    WGPUProcAdapterAddRef wgpuAdapterAddRef;
     WGPUProcAdapterRelease wgpuAdapterRelease;
     
     // Procs of AdapterInfo
@@ -54,12 +54,12 @@ __gshared
 
     // Methods of BindGroup
     WGPUProcBindGroupSetLabel wgpuBindGroupSetLabel;
-    WGPUProcBindGroupReference wgpuBindGroupReference;
+    WGPUProcBindGroupAddRef wgpuBindGroupAddRef;
     WGPUProcBindGroupRelease wgpuBindGroupRelease;
     
     // Methods of BindGroupLayout
     WGPUProcBindGroupLayoutSetLabel wgpuBindGroupLayoutSetLabel;
-    WGPUProcBindGroupLayoutReference wgpuBindGroupLayoutReference;
+    WGPUProcBindGroupLayoutAddRef wgpuBindGroupLayoutAddRef;
     WGPUProcBindGroupLayoutRelease wgpuBindGroupLayoutRelease;
     
     // Methods of Buffer
@@ -72,12 +72,12 @@ __gshared
     WGPUProcBufferMapAsync wgpuBufferMapAsync;
     WGPUProcBufferSetLabel wgpuBufferSetLabel;
     WGPUProcBufferUnmap wgpuBufferUnmap;
-    WGPUProcBufferReference wgpuBufferReference;
+    WGPUProcBufferAddRef wgpuBufferAddRef;
     WGPUProcBufferRelease wgpuBufferRelease;
     
     // Methods of CommandBuffer
     WGPUProcCommandBufferSetLabel wgpuCommandBufferSetLabel;
-    WGPUProcCommandBufferReference wgpuCommandBufferReference;
+    WGPUProcCommandBufferAddRef wgpuCommandBufferAddRef;
     WGPUProcCommandBufferRelease wgpuCommandBufferRelease;
 
     // Methods of CommandEncoder
@@ -95,7 +95,7 @@ __gshared
     WGPUProcCommandEncoderResolveQuerySet wgpuCommandEncoderResolveQuerySet;
     WGPUProcCommandEncoderSetLabel wgpuCommandEncoderSetLabel;
     WGPUProcCommandEncoderWriteTimestamp wgpuCommandEncoderWriteTimestamp;
-    WGPUProcCommandEncoderReference wgpuCommandEncoderReference;
+    WGPUProcCommandEncoderAddRef wgpuCommandEncoderAddRef;
     WGPUProcCommandEncoderRelease wgpuCommandEncoderRelease;
     
     // Methods of ComputePassEncoder
@@ -108,13 +108,13 @@ __gshared
     WGPUProcComputePassEncoderSetBindGroup wgpuComputePassEncoderSetBindGroup;
     WGPUProcComputePassEncoderSetLabel wgpuComputePassEncoderSetLabel;
     WGPUProcComputePassEncoderSetPipeline wgpuComputePassEncoderSetPipeline;
-    WGPUProcComputePassEncoderReference wgpuComputePassEncoderReference;
+    WGPUProcComputePassEncoderAddRef wgpuComputePassEncoderAddRef;
     WGPUProcComputePassEncoderRelease wgpuComputePassEncoderRelease;
     
     // Methods of ComputePipeline
     WGPUProcComputePipelineGetBindGroupLayout wgpuComputePipelineGetBindGroupLayout;
     WGPUProcComputePipelineSetLabel wgpuComputePipelineSetLabel;
-    WGPUProcComputePipelineReference wgpuComputePipelineReference;
+    WGPUProcComputePipelineAddRef wgpuComputePipelineAddRef;
     WGPUProcComputePipelineRelease wgpuComputePipelineRelease;
     
     // Methods of Device
@@ -133,28 +133,30 @@ __gshared
     WGPUProcDeviceCreateShaderModule wgpuDeviceCreateShaderModule;
     WGPUProcDeviceCreateTexture wgpuDeviceCreateTexture;
     WGPUProcDeviceDestroy wgpuDeviceDestroy;
-    WGPUProcDeviceEnumerateFeatures wgpuDeviceEnumerateFeatures;
+    WGPUProcDeviceGetAdapterInfo wgpuDeviceGetAdapterInfo;
+    WGPUProcDeviceGetFeatures wgpuDeviceGetFeatures;
     WGPUProcDeviceGetLimits wgpuDeviceGetLimits;
     WGPUProcDeviceGetQueue wgpuDeviceGetQueue;
     WGPUProcDeviceHasFeature wgpuDeviceHasFeature;
     WGPUProcDevicePopErrorScope wgpuDevicePopErrorScope;
     WGPUProcDevicePushErrorScope wgpuDevicePushErrorScope;
-    //WGPUProcDeviceSetDeviceLostCallback wgpuDeviceSetDeviceLostCallback;
     WGPUProcDeviceSetLabel wgpuDeviceSetLabel;
-    WGPUProcDeviceReference wgpuDeviceReference;
+    WGPUProcDeviceAddRef wgpuDeviceAddRef;
     WGPUProcDeviceRelease wgpuDeviceRelease;
     
     // Methods of Instance
     WGPUProcInstanceCreateSurface wgpuInstanceCreateSurface;
+    WGPUProcInstanceGetWGSLLanguageFeatures wgpuInstanceGetWGSLLanguageFeatures;
     WGPUProcInstanceHasWGSLLanguageFeature wgpuInstanceHasWGSLLanguageFeature;
     WGPUProcInstanceProcessEvents wgpuInstanceProcessEvents;
     WGPUProcInstanceRequestAdapter wgpuInstanceRequestAdapter;
-    WGPUProcInstanceReference wgpuInstanceReference;
+    WGPUProcInstanceWaitAny wgpuInstanceWaitAny;
+    WGPUProcInstanceAddRef wgpuInstanceAddRef;
     WGPUProcInstanceRelease wgpuInstanceRelease;
     
     // Methods of PipelineLayout
     WGPUProcPipelineLayoutSetLabel wgpuPipelineLayoutSetLabel;
-    WGPUProcPipelineLayoutReference wgpuPipelineLayoutReference;
+    WGPUProcPipelineLayoutAddRef wgpuPipelineLayoutAddRef;
     WGPUProcPipelineLayoutRelease wgpuPipelineLayoutRelease;
     
     // Methods of QuerySet
@@ -162,7 +164,7 @@ __gshared
     WGPUProcQuerySetGetCount wgpuQuerySetGetCount;
     WGPUProcQuerySetGetType wgpuQuerySetGetType;
     WGPUProcQuerySetSetLabel wgpuQuerySetSetLabel;
-    WGPUProcQuerySetReference wgpuQuerySetReference;
+    WGPUProcQuerySetAddRef wgpuQuerySetAddRef;
     WGPUProcQuerySetRelease wgpuQuerySetRelease;
     
     // Methods of Queue
@@ -171,12 +173,12 @@ __gshared
     WGPUProcQueueSubmit wgpuQueueSubmit;
     WGPUProcQueueWriteBuffer wgpuQueueWriteBuffer;
     WGPUProcQueueWriteTexture wgpuQueueWriteTexture;
-    WGPUProcQueueReference wgpuQueueReference;
+    WGPUProcQueueAddRef wgpuQueueAddRef;
     WGPUProcQueueRelease wgpuQueueRelease;
     
     // Methods of RenderBundleEncoder
     WGPUProcRenderBundleSetLabel wgpuRenderBundleSetLabel;
-    WGPUProcRenderBundleReference wgpuRenderBundleReference;
+    WGPUProcRenderBundleAddRef wgpuRenderBundleAddRef;
     WGPUProcRenderBundleRelease wgpuRenderBundleRelease;
     
     // Methods of RenderBundleEncoder
@@ -193,7 +195,7 @@ __gshared
     WGPUProcRenderBundleEncoderSetLabel wgpuRenderBundleEncoderSetLabel;
     WGPUProcRenderBundleEncoderSetPipeline wgpuRenderBundleEncoderSetPipeline;
     WGPUProcRenderBundleEncoderSetVertexBuffer wgpuRenderBundleEncoderSetVertexBuffer;
-    WGPUProcRenderBundleEncoderReference wgpuRenderBundleEncoderReference;
+    WGPUProcRenderBundleEncoderAddRef wgpuRenderBundleEncoderAddRef;
     WGPUProcRenderBundleEncoderRelease wgpuRenderBundleEncoderRelease;
 
     // Methods of RenderPassEncoder
@@ -217,25 +219,31 @@ __gshared
     WGPUProcRenderPassEncoderSetStencilReference wgpuRenderPassEncoderSetStencilReference;
     WGPUProcRenderPassEncoderSetVertexBuffer wgpuRenderPassEncoderSetVertexBuffer;
     WGPUProcRenderPassEncoderSetViewport wgpuRenderPassEncoderSetViewport;
-    WGPUProcRenderPassEncoderReference wgpuRenderPassEncoderReference;
+    WGPUProcRenderPassEncoderAddRef wgpuRenderPassEncoderAddRef;
     WGPUProcRenderPassEncoderRelease wgpuRenderPassEncoderRelease;
 
     // Methods of RenderPipeline
     WGPUProcRenderPipelineGetBindGroupLayout wgpuRenderPipelineGetBindGroupLayout;
     WGPUProcRenderPipelineSetLabel wgpuRenderPipelineSetLabel;
-    WGPUProcRenderPipelineReference wgpuRenderPipelineReference;
+    WGPUProcRenderPipelineAddRef wgpuRenderPipelineAddRef;
     WGPUProcRenderPipelineRelease wgpuRenderPipelineRelease;
 
     // Methods of Sampler
     WGPUProcSamplerSetLabel wgpuSamplerSetLabel;
-    WGPUProcSamplerReference wgpuSamplerReference;
+    WGPUProcSamplerAddRef wgpuSamplerAddRef;
     WGPUProcSamplerRelease wgpuSamplerRelease;
 
     // Methods of ShaderModule
     WGPUProcShaderModuleGetCompilationInfo wgpuShaderModuleGetCompilationInfo;
     WGPUProcShaderModuleSetLabel wgpuShaderModuleSetLabel;
-    WGPUProcShaderModuleReference wgpuShaderModuleReference;
+    WGPUProcShaderModuleAddRef wgpuShaderModuleAddRef;
     WGPUProcShaderModuleRelease wgpuShaderModuleRelease;
+    
+    // Methods of SupportedFeatures
+    WGPUProcSupportedFeaturesFreeMembers wgpuSupportedFeaturesFreeMembers;
+
+    // Methods of SupportedWGSLLanguageFeatures
+    WGPUProcSupportedWGSLLanguageFeaturesFreeMembers wgpuSupportedWGSLLanguageFeaturesFreeMembers;
 
     // Methods of Surface
     WGPUProcSurfaceConfigure wgpuSurfaceConfigure;
@@ -244,7 +252,7 @@ __gshared
     WGPUProcSurfacePresent wgpuSurfacePresent;
     WGPUProcSurfaceSetLabel wgpuSurfaceSetLabel;
     WGPUProcSurfaceUnconfigure wgpuSurfaceUnconfigure;
-    WGPUProcSurfaceReference wgpuSurfaceReference;
+    WGPUProcSurfaceAddRef wgpuSurfaceAddRef;
     WGPUProcSurfaceRelease wgpuSurfaceRelease;
 
     // Methods of SurfaceCapabilities
@@ -262,12 +270,12 @@ __gshared
     WGPUProcTextureGetUsage wgpuTextureGetUsage;
     WGPUProcTextureGetWidth wgpuTextureGetWidth;
     WGPUProcTextureSetLabel wgpuTextureSetLabel;
-    WGPUProcTextureReference wgpuTextureReference;
+    WGPUProcTextureAddRef wgpuTextureAddRef;
     WGPUProcTextureRelease wgpuTextureRelease;
 
     // Methods of TextureView
     WGPUProcTextureViewSetLabel wgpuTextureViewSetLabel;
-    WGPUProcTextureViewReference wgpuTextureViewReference;
+    WGPUProcTextureViewAddRef wgpuTextureViewAddRef;
     WGPUProcTextureViewRelease wgpuTextureViewRelease;
 
     //
@@ -275,10 +283,13 @@ __gshared
     WGPUProcInstanceEnumerateAdapters wgpuInstanceEnumerateAdapters;
     WGPUProcQueueSubmitForIndex wgpuQueueSubmitForIndex;
     WGPUProcDevicePoll wgpuDevicePoll;
+    WGPUProcDeviceCreateShaderModuleSpirV wgpuDeviceCreateShaderModuleSpirV;
     WGPUProcSetLogCallback wgpuSetLogCallback;
     WGPUProcSetLogLevel wgpuSetLogLevel;
     WGPUProcGetVersion wgpuGetVersion;
     WGPUProcRenderPassEncoderSetPushConstants wgpuRenderPassEncoderSetPushConstants;
+    WGPUProcComputePassEncoderSetPushConstants wgpuComputePassEncoderSetPushConstants;
+    WGPUProcRenderBundleEncoderSetPushConstants wgpuRenderBundleEncoderSetPushConstants;
     WGPUProcRenderPassEncoderMultiDrawIndirect wgpuRenderPassEncoderMultiDrawIndirect;
     WGPUProcRenderPassEncoderMultiDrawIndexedIndirect wgpuRenderPassEncoderMultiDrawIndexedIndirect;
     WGPUProcRenderPassEncoderMultiDrawIndirectCount wgpuRenderPassEncoderMultiDrawIndirectCount;
@@ -287,4 +298,6 @@ __gshared
     WGPUProcComputePassEncoderEndPipelineStatisticsQuery wgpuComputePassEncoderEndPipelineStatisticsQuery;
     WGPUProcRenderPassEncoderBeginPipelineStatisticsQuery wgpuRenderPassEncoderBeginPipelineStatisticsQuery;
     WGPUProcRenderPassEncoderEndPipelineStatisticsQuery wgpuRenderPassEncoderEndPipelineStatisticsQuery;
+    WGPUProcComputePassEncoderWriteTimestamp wgpuComputePassEncoderWriteTimestamp;
+    WGPUProcRenderPassEncoderWriteTimestamp wgpuRenderPassEncoderWriteTimestamp;
 }

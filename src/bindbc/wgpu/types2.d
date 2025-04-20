@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019-2024 Timur Gafarov.
+Copyright (c) 2019-2025 Timur Gafarov.
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -35,12 +35,11 @@ import bindbc.wgpu.types;
 
 enum WGPUNativeSType
 {
-    // Start at 6 to prevent collisions with webgpu STypes
+    // Start at 0003 since that's allocated range for wgpu-native
     DeviceExtras = 0x00030001,
-    RequiredLimitsExtras = 0x00030002,
+    NativeLimits = 0x00030002,
     PipelineLayoutExtras = 0x00030003,
     ShaderModuleGLSLDescriptor = 0x00030004,
-    SupportedLimitsExtras = 0x00030005,
     InstanceExtras = 0x00030006,
     BindGroupEntryExtras = 0x00030007,
     BindGroupLayoutEntryExtras = 0x00030008,
@@ -63,8 +62,6 @@ enum WGPUNativeFeature
     PartiallyBoundBindingArray = 0x0003000A,
     TextureFormat16bitNorm = 0x0003000B,
     TextureCompressionAstcHdr = 0x0003000C,
-    // TODO: requires wgpu.h api change
-    // TimestampQueryInsidePasses = 0x0003000D,
     MappablePrimaryBuffers = 0x0003000E,
     BufferBindingArray = 0x0003000F,
     UniformBufferAndStorageTextureArrayNonUniformIndexing = 0x00030010,
@@ -75,7 +72,7 @@ enum WGPUNativeFeature
     // PolygonModePoint = 0x00030014,
     // ConservativeRasterization = 0x00030015,
     // ClearTexture = 0x00030016,
-    // SpirvShaderPassthrough = 0x00030017,
+    SpirvShaderPassthrough = 0x00030017,
     // Multiview = 0x00030018,
     VertexAttribute64bit = 0x00030019,
     TextureFormatNv12 = 0x0003001A,
@@ -85,6 +82,11 @@ enum WGPUNativeFeature
     ShaderI16 = 0x0003001E,
     ShaderPrimitiveIndex = 0x0003001F,
     ShaderEarlyDepthTest = 0x00030020,
+    Subgroup = 0x00030021,
+    SubgroupVertex = 0x00030022,
+    SubgroupBarrier = 0x00030023,
+    TimestampQueryInsideEncoders = 0x00030024,
+    TimestampQueryInsidePasses = 0x00030025,
     Force32 = 0x7FFFFFFF
 }
 
@@ -99,7 +101,7 @@ enum WGPULogLevel
     Force32 = 0x7FFFFFFF
 }
 
-enum WGPUInstanceBackend
+enum WGPUInstanceBackend: WGPUFlags
 {
     All = 0x00000000,
     Vulkan = 1 << 0,
@@ -108,14 +110,12 @@ enum WGPUInstanceBackend
     DX12 = 1 << 3,
     DX11 = 1 << 4,
     BrowserWebGPU = 1 << 5,
-    Primary = Vulkan | Metal | DX12 | BrowserWebGPU,
-    Secondary = GL | DX11,
+    Primary = (1 << 0) | (1 << 2) | (1 << 3) | (1 << 5), // Vulkan, Metal, DX12 and BrowserWebGPU
+    Secondary = (1 << 1) | (1 << 4), // GL and DX11
     Force32 = 0x7FFFFFFF
 }
 
-alias WGPUInstanceBackendFlags = WGPUFlags;
-
-enum WGPUInstanceFlag 
+enum WGPUInstanceFlag: WGPUFlags
 {
     Default = 0x00000000,
     Debug = 1 << 0,
@@ -123,8 +123,6 @@ enum WGPUInstanceFlag
     DiscardHalLabels = 1 << 2,
     Force32 = 0x7FFFFFFF
 }
-
-alias WGPUInstanceFlags = WGPUFlags;
 
 enum WGPUDx12Compiler
 {
@@ -161,41 +159,30 @@ enum WGPUNativeQueryType
 struct WGPUInstanceExtras
 {
     WGPUChainedStruct chain;
-    WGPUInstanceBackendFlags backends;
-    WGPUInstanceFlags flags;
+    WGPUInstanceBackend backends;
+    WGPUInstanceFlag flags;
     WGPUDx12Compiler dx12ShaderCompiler;
     WGPUGles3MinorVersion gles3MinorVersion;
-    const char * dxilPath;
-    const char * dxcPath;
+    WGPUStringView dxilPath;
+    WGPUStringView dxcPath;
 }
 
 struct WGPUDeviceExtras
 {
     WGPUChainedStruct chain;
-    const(char)* tracePath;
+    WGPUStringView tracePath;
 }
 
-struct WGPUNativeLimits {
+struct WGPUNativeLimits
+{
+    WGPUChainedStructOut chain;
     uint maxPushConstantSize;
     uint maxNonSamplerBindings;
 }
 
-struct WGPURequiredLimitsExtras
-{
-    WGPUChainedStruct chain;
-    WGPUNativeLimits limits;
-}
-
-struct WGPUSupportedLimitsExtras
-{
-    WGPUChainedStructOut chain;
-    WGPUNativeLimits limits;
-}
-
 struct WGPUPushConstantRange
 {
-    alias WGPUShaderStageFlags = uint;
-    WGPUShaderStageFlags stages;
+    WGPUShaderStage stages;
     uint start;
     uint end;
 }
@@ -209,25 +196,26 @@ struct WGPUPipelineLayoutExtras
 
 alias WGPUSubmissionIndex = ulong;
 
-struct WGPUWrappedSubmissionIndex
-{
-    WGPUQueue queue;
-    WGPUSubmissionIndex submissionIndex;
-}
-
 struct WGPUShaderDefine
 {
-    const(char)* name;
-    const(char)* value;
+    WGPUStringView name;
+    WGPUStringView value;
 }
 
 struct WGPUShaderModuleGLSLDescriptor
 {
     WGPUChainedStruct chain;
     WGPUShaderStage stage;
-    const(char)* code;
+    WGPUStringView code;
     uint defineCount;
     WGPUShaderDefine* defines;
+}
+
+struct WGPUShaderModuleDescriptorSpirV
+{
+    WGPUStringView label;
+    uint sourceSize;
+    const(uint)* source;
 }
 
 struct WGPURegistryReport
@@ -235,7 +223,6 @@ struct WGPURegistryReport
    size_t numAllocated;
    size_t numKeptFromUser;
    size_t numReleasedFromUser;
-   size_t numError;
    size_t elementSize;
 }
 
@@ -252,6 +239,7 @@ struct WGPUHubReport
     WGPURegistryReport renderBundles;
     WGPURegistryReport renderPipelines;
     WGPURegistryReport computePipelines;
+    WGPURegistryReport pipelineCaches;
     WGPURegistryReport querySets;
     WGPURegistryReport buffers;
     WGPURegistryReport textures;
@@ -262,17 +250,13 @@ struct WGPUHubReport
 struct WGPUGlobalReport
 {
     WGPURegistryReport surfaces;
-    WGPUBackendType backendType;
-    WGPUHubReport vulkan;
-    WGPUHubReport metal;
-    WGPUHubReport dx12;
-    WGPUHubReport gl;
+    WGPUHubReport hub;
 }
 
 struct WGPUInstanceEnumerateAdapterOptions
 {
     const(WGPUChainedStruct)* nextInChain;
-    WGPUInstanceBackendFlags backends;
+    WGPUInstanceBackend backends;
 }
 
 struct WGPUBindGroupEntryExtras
@@ -305,48 +289,42 @@ struct WGPUSurfaceConfigurationExtras
     uint desiredMaximumFrameLatency;
 }
 
+extern(C)
+{
+    alias WGPULogCallback = void function(WGPULogLevel level, WGPUStringView message, void* userdata);
+}
+
 enum WGPUNativeTextureFormat
 {
-    // From Features::TEXTURE_FORMAT_16BIT_NORM
     R16Unorm = 0x00030001,
     R16Snorm = 0x00030002,
     Rg16Unorm = 0x00030003,
     Rg16Snorm = 0x00030004,
     Rgba16Unorm = 0x00030005,
     Rgba16Snorm = 0x00030006,
-    // From Features::TEXTURE_FORMAT_NV12
-    NV12 = 0x00030007,
+    NV12 = 0x00030007
 }
-
-extern(C):
-
-alias WGPULogCallback = void function (WGPULogLevel level, const(char)* message, void* userdata);
 
 extern(C) @nogc nothrow:
 
 alias WGPUProcGenerateReport = void function(WGPUInstance instance, WGPUGlobalReport* report);
 alias WGPUProcInstanceEnumerateAdapters = size_t function(WGPUInstance instance, const(WGPUInstanceEnumerateAdapterOptions)* options, WGPUAdapter* adapters);
-
 alias WGPUProcQueueSubmitForIndex = WGPUSubmissionIndex function(WGPUQueue queue, size_t commandCount, const(WGPUCommandBuffer)* commands);
-
-// Returns true if the queue is empty, or false if there are more queue submissions still in flight.
-alias WGPUProcDevicePoll = WGPUBool function(WGPUDevice device, WGPUBool wait, const(WGPUWrappedSubmissionIndex)* wrappedSubmissionIndex);
-
+alias WGPUProcDevicePoll = WGPUBool function(WGPUDevice device, WGPUBool wait, const(WGPUSubmissionIndex)* wrappedSubmissionIndex);
+alias WGPUProcDeviceCreateShaderModuleSpirV = WGPUShaderModule function(WGPUDevice device, const(WGPUShaderModuleDescriptorSpirV)* descriptor);
 alias WGPUProcSetLogCallback = void function(WGPULogCallback callback, void* userdata);
-
 alias WGPUProcSetLogLevel = void function(WGPULogLevel level);
-
 alias WGPUProcGetVersion = uint function();
-
-alias WGPUProcRenderPassEncoderSetPushConstants = void function(WGPURenderPassEncoder encoder, WGPUShaderStageFlags stages, uint offset, uint sizeBytes, const(void)* data);
-
+alias WGPUProcRenderPassEncoderSetPushConstants = void function(WGPURenderPassEncoder encoder, WGPUShaderStage stages, uint offset, uint sizeBytes, const(void)* data);
+alias WGPUProcComputePassEncoderSetPushConstants = void function(WGPUComputePassEncoder encoder, uint offset, uint sizeBytes, const(void)* data);
+alias WGPUProcRenderBundleEncoderSetPushConstants = void function(WGPURenderBundleEncoder encoder, WGPUShaderStage stages, uint offset, uint sizeBytes, const(void)* data);
 alias WGPUProcRenderPassEncoderMultiDrawIndirect = void function(WGPURenderPassEncoder encoder, WGPUBuffer buffer, ulong offset, uint count);
 alias WGPUProcRenderPassEncoderMultiDrawIndexedIndirect = void function(WGPURenderPassEncoder encoder, WGPUBuffer buffer, ulong offset, uint count);
-
 alias WGPUProcRenderPassEncoderMultiDrawIndirectCount = void function(WGPURenderPassEncoder encoder, WGPUBuffer buffer, ulong offset, WGPUBuffer count_buffer, ulong count_buffer_offset, uint max_count);
 alias WGPUProcRenderPassEncoderMultiDrawIndexedIndirectCount = void function(WGPURenderPassEncoder encoder, WGPUBuffer buffer, ulong offset, WGPUBuffer count_buffer, ulong count_buffer_offset, uint max_count);
-
 alias WGPUProcComputePassEncoderBeginPipelineStatisticsQuery = void function(WGPUComputePassEncoder computePassEncoder, WGPUQuerySet querySet, uint queryIndex);
 alias WGPUProcComputePassEncoderEndPipelineStatisticsQuery = void function(WGPUComputePassEncoder computePassEncoder);
 alias WGPUProcRenderPassEncoderBeginPipelineStatisticsQuery = void function(WGPURenderPassEncoder renderPassEncoder, WGPUQuerySet querySet, uint queryIndex);
 alias WGPUProcRenderPassEncoderEndPipelineStatisticsQuery = void function(WGPURenderPassEncoder renderPassEncoder);
+alias WGPUProcComputePassEncoderWriteTimestamp = void function(WGPUComputePassEncoder computePassEncoder, WGPUQuerySet querySet, uint queryIndex);
+alias WGPUProcRenderPassEncoderWriteTimestamp = void function(WGPURenderPassEncoder renderPassEncoder, WGPUQuerySet querySet, uint queryIndex);

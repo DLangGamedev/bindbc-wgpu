@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019-2024 Timur Gafarov.
+Copyright (c) 2019-2025 Timur Gafarov.
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -87,11 +87,12 @@ void main(string[] args)
 
     WGPUInstanceDescriptor instanceDesc;
     WGPUInstance instance = wgpuCreateInstance(&instanceDesc);
+    assert(instance);
     writeln("Instance OK");
     
     uint winWidth = 1280;
     uint winHeight = 720;
-    SDL_Window* sdlWindow = SDL_CreateWindow(toStringz("WGPU"),
+    SDL_Window* sdlWindow = SDL_CreateWindow(toStringz("WebGPU Hello Triangle"),
         SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
         winWidth, winHeight,
         SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
@@ -105,13 +106,27 @@ void main(string[] args)
     }
     writeln("Subsystem: ", wmInfo.subsystem);
     WGPUSurface surface = createSurface(instance, sdlWindow, wmInfo);
+    assert(surface);
+    writeln("Surface OK");
     
     WGPUAdapter adapter;
     WGPURequestAdapterOptions adapterOpts = {
         nextInChain: null,
+        featureLevel: WGPUFeatureLevel.Core,
+        powerPreference: WGPUPowerPreference.HighPerformance,
+        forceFallbackAdapter: false,
+        backendType: WGPUBackendType.Vulkan,
         compatibleSurface: surface
     };
-    wgpuInstanceRequestAdapter(instance, &adapterOpts, &requestAdapterCallback, cast(void*)&adapter);
+    WGPURequestAdapterCallbackInfo requestAdapterCallbackInfo = {
+        nextInChain: null,
+        mode: WGPUCallbackMode.WaitAnyOnly,
+        callback: &requestAdapterCallback,
+        userdata1: cast(void*)&adapter,
+        userdata2: null
+    };
+    wgpuInstanceRequestAdapter(instance, &adapterOpts, requestAdapterCallbackInfo);
+    assert(adapter);
     writeln("Adapter OK");
     
     WGPUDevice device;
@@ -119,37 +134,54 @@ void main(string[] args)
         chain: {
             next: null,
             sType: cast(WGPUSType)WGPUNativeSType.DeviceExtras
-        },
-        tracePath: null,
-    };
-    WGPURequiredLimits limits = {
-        nextInChain: null,
-        limits: {
         }
+    };
+    WGPULimits limits = {
+        nextInChain: null
+    };
+    WGPUQueueDescriptor defaultQueueDesc = {
+        nextInChain: null,
+        label: "DefaultQueue"
     };
     WGPUDeviceDescriptor deviceDesc = {
         nextInChain: cast(const(WGPUChainedStruct)*)&deviceExtras,
+        label: "Device",
         requiredFeatureCount: 0,
         requiredFeatures: null,
-        requiredLimits: &limits
+        requiredLimits: &limits,
+        defaultQueue: defaultQueueDesc,
+        deviceLostCallback: null
+    };
+    WGPURequestDeviceCallbackInfo requestDeviceCallbackInfo = {
+        nextInChain: null,
+        mode: WGPUCallbackMode.WaitAnyOnly,
+        callback: &requestDeviceCallback,
+        userdata1: cast(void*)&device,
+        userdata2: null
     };
     
-    wgpuAdapterRequestDevice(adapter, &deviceDesc, &requestDeviceCallback, cast(void*)&device);
+    wgpuAdapterRequestDevice(adapter, &deviceDesc, requestDeviceCallbackInfo);
+    assert(device);
     writeln("Device OK");
     
-    const(char)* shaderText = readText("data/shader.wgsl").toStringz;
-    WGPUShaderModuleWGSLDescriptor wgslDescriptor = {
+    WGPUQueue queue = wgpuDeviceGetQueue(device);
+    assert(queue);
+    writeln("Queue OK");
+    
+    string shaderText = readText("data/shader.wgsl");
+    WGPUShaderSourceWGSL wgslDescriptor = {
         chain: {
             next: null,
-            sType: WGPUSType.ShaderModuleWGSLDescriptor
+            sType: WGPUSType.ShaderSourceWGSL
         },
         code: shaderText
     };
     WGPUShaderModuleDescriptor shaderSource = {
         nextInChain: cast(const(WGPUChainedStruct)*)&wgslDescriptor,
-        label: toStringz("shader.wgsl")
+        label: "shader.wgsl"
     };
     WGPUShaderModule shaderModule = wgpuDeviceCreateShaderModule(device, &shaderSource);
+    assert(shaderModule);
     writeln("Shader OK");
     
     WGPUBindGroupLayoutDescriptor bglDesc = {
@@ -164,7 +196,9 @@ void main(string[] args)
         entries: null,
         entryCount: 0
     };
+    assert(bindGroupLayout);
     WGPUBindGroup bindGroup = wgpuDeviceCreateBindGroup(device, &bgDesc);
+    assert(bindGroup);
     WGPUBindGroupLayout[1] bindGroupLayouts = [ bindGroupLayout ];
     writeln("Bind group OK");
     
@@ -173,11 +207,12 @@ void main(string[] args)
         bindGroupLayoutCount: bindGroupLayouts.length
     };
     WGPUPipelineLayout pipelineLayout = wgpuDeviceCreatePipelineLayout(device, &plDesc);
+    assert(pipelineLayout);
     writeln("Pipeline layout OK");
     
-    WGPUSurfaceCapabilities surfaceCapabilities;
-    wgpuSurfaceGetCapabilities(surface, adapter, &surfaceCapabilities);
-    WGPUTextureFormat surfaceFormat = surfaceCapabilities.formats[0];
+    WGPUSurfaceCapabilities surfaceCaps;
+    wgpuSurfaceGetCapabilities(surface, adapter, &surfaceCaps);
+    WGPUTextureFormat surfaceFormat = surfaceCaps.formats[0];
     writeln(surfaceFormat);
     
     WGPUBlendState blend = {
@@ -192,7 +227,7 @@ void main(string[] args)
             operation: WGPUBlendOperation.Add
         }
     };
-    WGPUColorTargetState cts = {
+    WGPUColorTargetState colorTarget = {
         format: surfaceFormat,
         blend: &blend,
         writeMask: WGPUColorWriteMask.All
@@ -201,7 +236,7 @@ void main(string[] args)
         module_: shaderModule,
         entryPoint: "fs_main",
         targetCount: 1,
-        targets: &cts
+        targets: &colorTarget
     };
     WGPURenderPipelineDescriptor rpDesc = {
         label: "Render pipeline",
@@ -227,6 +262,7 @@ void main(string[] args)
         depthStencil: null
     };
     WGPURenderPipeline pipeline = wgpuDeviceCreateRenderPipeline(device, &rpDesc);
+    assert(pipeline);
     writeln("Render pipeline OK");
     
     void configureSurface(uint w, uint h) {
@@ -237,7 +273,7 @@ void main(string[] args)
             usage: WGPUTextureUsage.RenderAttachment,
             viewFormatCount: 0,
             viewFormats: null,
-            alphaMode: WGPUCompositeAlphaMode.Auto,
+            alphaMode: surfaceCaps.alphaModes[0],
             width: w,
             height: h,
             presentMode: WGPUPresentMode.Fifo
@@ -287,21 +323,46 @@ void main(string[] args)
         
         WGPUSurfaceTexture surfaceTexture;
         wgpuSurfaceGetCurrentTexture(surface, &surfaceTexture);
-        if (surfaceTexture.status != WGPUSurfaceGetCurrentTextureStatus.Success)
-            continue;
+        switch(surfaceTexture.status)
+        {
+            case WGPUSurfaceGetCurrentTextureStatus.SuccessOptimal,
+                 WGPUSurfaceGetCurrentTextureStatus.SuccessSuboptimal:
+                // All good
+                break;
+            case WGPUSurfaceGetCurrentTextureStatus.Timeout,
+                 WGPUSurfaceGetCurrentTextureStatus.Outdated,
+                 WGPUSurfaceGetCurrentTextureStatus.Lost:
+                // Skip this frame, and re-configure surface
+                if (surfaceTexture.texture !is null)
+                    wgpuTextureRelease(surfaceTexture.texture);
+                configureSurface(winWidth, winHeight);
+                continue;
+            case WGPUSurfaceGetCurrentTextureStatus.OutOfMemory,
+                 WGPUSurfaceGetCurrentTextureStatus.DeviceLost,
+                 WGPUSurfaceGetCurrentTextureStatus.Force32:
+                // Fatal error
+                writeln("Error: surfaceTexture.status = ", surfaceTexture.status);
+                running = false;
+                continue;
+            default:
+                writeln("Error: surfaceTexture.status = ", surfaceTexture.status);
+                running = false;
+                continue;
+        }
         
-        WGPUTextureView nextTextureView = wgpuTextureCreateView(surfaceTexture.texture, null);
-        if (!nextTextureView)
-            continue;
+        assert(surfaceTexture.texture);
         
+        WGPUTextureView frame = wgpuTextureCreateView(surfaceTexture.texture, null);
+        assert(frame);
         
         WGPUCommandEncoderDescriptor ceDesc = {
             label: "Command Encoder"
         };
-        WGPUCommandEncoder encoder = wgpuDeviceCreateCommandEncoder(device, &ceDesc);
+        WGPUCommandEncoder commEncoder = wgpuDeviceCreateCommandEncoder(device, &ceDesc);
+        assert(commEncoder);
         
         WGPURenderPassColorAttachment colorAttachment = {
-            view: nextTextureView,
+            view: frame,
             depthSlice: WGPU_DEPTH_SLICE_UNDEFINED,
             resolveTarget: null,
             loadOp: WGPULoadOp.Clear,
@@ -313,7 +374,8 @@ void main(string[] args)
             colorAttachmentCount: 1,
             depthStencilAttachment: null
         };
-        WGPURenderPassEncoder renderPass = wgpuCommandEncoderBeginRenderPass(encoder, &passDesc);
+        WGPURenderPassEncoder renderPass = wgpuCommandEncoderBeginRenderPass(commEncoder, &passDesc);
+        assert(renderPass);
         
         wgpuRenderPassEncoderSetPipeline(renderPass, pipeline);
         wgpuRenderPassEncoderSetBindGroup(renderPass, 0, bindGroup, 0, null);
@@ -321,20 +383,28 @@ void main(string[] args)
         wgpuRenderPassEncoderEnd(renderPass);
         wgpuRenderPassEncoderRelease(renderPass);
         
-        WGPUQueue queue = wgpuDeviceGetQueue(device);
         WGPUCommandBufferDescriptor cmdbufDesc = { label: null };
-        WGPUCommandBuffer cmdBuffer = wgpuCommandEncoderFinish(encoder, &cmdbufDesc);
+        WGPUCommandBuffer cmdBuffer = wgpuCommandEncoderFinish(commEncoder, &cmdbufDesc);
+        assert(cmdBuffer);
 
         wgpuQueueSubmit(queue, 1, &cmdBuffer);
-
         wgpuSurfacePresent(surface);
 
         wgpuCommandBufferRelease(cmdBuffer);
-        wgpuCommandEncoderRelease(encoder);
-        wgpuTextureViewRelease(nextTextureView);
+        wgpuCommandEncoderRelease(commEncoder);
+        wgpuTextureViewRelease(frame);
         wgpuTextureRelease(surfaceTexture.texture);
     }
     
+    wgpuRenderPipelineRelease(pipeline);
+    wgpuPipelineLayoutRelease(pipelineLayout);
+    wgpuShaderModuleRelease(shaderModule);
+    wgpuSurfaceCapabilitiesFreeMembers(surfaceCaps);
+    wgpuQueueRelease(queue);
+    wgpuDeviceRelease(device);
+    wgpuAdapterRelease(adapter);
+    wgpuSurfaceRelease(surface);
+    wgpuInstanceRelease(instance);
     SDL_Quit();
 }
 
@@ -347,17 +417,19 @@ WGPUSurface createSurface(WGPUInstance instance, SDL_Window* window, SDL_SysWMin
         {
             auto win_hwnd = wmInfo.info.win.window;
             auto win_hinstance = wmInfo.info.win.hinstance;
-            WGPUSurfaceDescriptorFromWindowsHWND sfdHwnd = {
+            
+            WGPUSurfaceSourceWindowsHWND surfaceSrc = {
                 chain: {
                     next: null,
-                    sType: WGPUSType.SurfaceDescriptorFromWindowsHWND
+                    sType: WGPUSType.SurfaceSourceWindowsHWND
                 },
                 hinstance: win_hinstance,
                 hwnd: win_hwnd
             };
+            
             WGPUSurfaceDescriptor sfd = {
                 label: null,
-                nextInChain: cast(const(WGPUChainedStruct)*)&sfdHwnd
+                nextInChain: cast(const(WGPUChainedStruct)*)&surfaceSrc
             };
             surface = wgpuInstanceCreateSurface(instance, &sfd);
         }
@@ -370,45 +442,64 @@ WGPUSurface createSurface(WGPUInstance instance, SDL_Window* window, SDL_SysWMin
     {
         if (wmInfo.subsystem == SDL_SYSWM_WAYLAND)
         {
-            // TODO: support Wayland
-            quit("Unsupported subsystem, sorry");
-        }
-        // System might use XCB so SDL_SysWMinfo will contain subsystem SDL_SYSWM_UNKNOWN. Although, X11 still can be used to create surface
-        else
-        {
-            auto x11_display = wmInfo.info.x11.display;
-            auto x11_window = wmInfo.info.x11.window;
-            WGPUSurfaceDescriptorFromXlibWindow sfdX11 = {
+            auto waylandDisplay = wmInfo.info.wl.wl_display;
+            auto waylandSurface = wmInfo.info.wl.wl_surface;
+            
+            WGPUSurfaceSourceWaylandSurface surfaceSrc = {
                 chain: {
                     next: null,
-                    sType: WGPUSType.SurfaceDescriptorFromXlibWindow
+                    sType: WGPUSType.SurfaceSourceWaylandSurface
+                },
+                display: waylandDisplay,
+                surface: waylandSurface
+            };
+            
+            WGPUSurfaceDescriptor sfd = {
+                label: null,
+                nextInChain: cast(const(WGPUChainedStruct)*)&surfaceSrc
+            };
+            surface = wgpuInstanceCreateSurface(instance, &sfd);
+        }
+        else
+        {
+           /*
+            * Just try to create X11 surface and hope for the best.
+            * System might use XCB, so wmInfo.subsystem will contain SDL_SYSWM_UNKNOWN.
+            */
+            auto x11_display = wmInfo.info.x11.display;
+            auto x11_window = wmInfo.info.x11.window;
+            
+            WGPUSurfaceSourceXlibWindow surfaceSrc = {
+                chain: {
+                    next: null,
+                    sType: WGPUSType.SurfaceSourceXlibWindow
                 },
                 display: x11_display,
                 window: x11_window
             };
+            
             WGPUSurfaceDescriptor sfd = {
                 label: null,
-                nextInChain: cast(const(WGPUChainedStruct)*)&sfdX11
+                nextInChain: cast(const(WGPUChainedStruct)*)&surfaceSrc
             };
             surface = wgpuInstanceCreateSurface(instance, &sfd);
         }
     }
     else version(OSX)
     {
-        // Needs test!
         SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC);
         auto metalLayer = SDL_RenderGetMetalLayer(renderer);
         
-        WGPUSurfaceDescriptorFromMetalLayer sfdMetal = {
+        WGPUSurfaceSourceMetalLayer surfaceSrc = {
             chain: {
                 next: null,
-                sType: WGPUSType.SurfaceDescriptorFromMetalLayer
+                sType: WGPUSType.SurfaceSourceMetalLayer
             },
             layer: metalLayer
         };
         WGPUSurfaceDescriptor sfd = {
             label: null,
-            nextInChain: cast(const(WGPUChainedStruct)*)&sfdMetal
+            nextInChain: cast(const(WGPUChainedStruct)*)&surfaceSrc
         };
         surface = wgpuInstanceCreateSurface(instance, &sfd);
         
@@ -419,7 +510,7 @@ WGPUSurface createSurface(WGPUInstance instance, SDL_Window* window, SDL_SysWMin
 
 extern(C)
 {
-    void logCallback(WGPULogLevel level, const(char)* msg, void* user_data)
+    void logCallback(WGPULogLevel level, WGPUStringView message, void* userdata)
     {
         const(char)[] level_message;
         switch(level)
@@ -432,28 +523,28 @@ extern(C)
             case WGPULogLevel.Trace: level_message = "trace"; break;
             default: level_message = "-"; break;
         }
-        writeln("WebGPU ", level_message, ": ",  to!string(msg));
+        writeln("WebGPU ", level_message, ": ", message);
     }
 
-    void requestAdapterCallback(WGPURequestAdapterStatus status, WGPUAdapter adapter, const(char)* message, void* userdata)
+    void requestAdapterCallback(WGPURequestAdapterStatus status, void* adapter, WGPUStringView message, void* userdata1, void* userdata2)
     {
         if (status == WGPURequestAdapterStatus.Success)
-            *cast(WGPUAdapter*)userdata = adapter;
+            *cast(WGPUAdapter*)userdata1 = adapter;
         else
         {
             writeln(status);
-            writeln(to!string(message));
+            writeln(message);
         }
     }
 
-    void requestDeviceCallback(WGPURequestDeviceStatus status, WGPUDevice device, const(char)* message, void* userdata)
+    void requestDeviceCallback(WGPURequestDeviceStatus status, WGPUDevice device, WGPUStringView message, void* userdata1, void* userdata2)
     {
         if (status == WGPURequestDeviceStatus.Success)
-            *cast(WGPUDevice*)userdata = device;
+            *cast(WGPUDevice*)userdata1 = device;
         else
         {
             writeln(status);
-            writeln(to!string(message));
+            writeln(message);
         }
     }
 }
