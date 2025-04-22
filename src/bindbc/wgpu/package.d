@@ -30,7 +30,6 @@ module bindbc.wgpu;
 public
 {
     import bindbc.wgpu.types;
-    import bindbc.wgpu.types2;
     import bindbc.wgpu.funcs;
     import bindbc.wgpu.loader;
 }

@@ -25,14 +25,13 @@ FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
-module bindbc.wgpu.types2;
+module bindbc.wgpu.c.wgpu;
 
-import bindbc.wgpu.types;
+import bindbc.wgpu.c.webgpu;
 
 /*
  * Type definitions from wgpu.h
  */
-
 enum WGPUNativeSType
 {
     // Start at 0003 since that's allocated range for wgpu-native
@@ -304,27 +303,3 @@ enum WGPUNativeTextureFormat
     Rgba16Snorm = 0x00030006,
     NV12 = 0x00030007
 }
-
-extern(C) @nogc nothrow:
-
-alias WGPUProcGenerateReport = void function(WGPUInstance instance, WGPUGlobalReport* report);
-alias WGPUProcInstanceEnumerateAdapters = size_t function(WGPUInstance instance, const(WGPUInstanceEnumerateAdapterOptions)* options, WGPUAdapter* adapters);
-alias WGPUProcQueueSubmitForIndex = WGPUSubmissionIndex function(WGPUQueue queue, size_t commandCount, const(WGPUCommandBuffer)* commands);
-alias WGPUProcDevicePoll = WGPUBool function(WGPUDevice device, WGPUBool wait, const(WGPUSubmissionIndex)* wrappedSubmissionIndex);
-alias WGPUProcDeviceCreateShaderModuleSpirV = WGPUShaderModule function(WGPUDevice device, const(WGPUShaderModuleDescriptorSpirV)* descriptor);
-alias WGPUProcSetLogCallback = void function(WGPULogCallback callback, void* userdata);
-alias WGPUProcSetLogLevel = void function(WGPULogLevel level);
-alias WGPUProcGetVersion = uint function();
-alias WGPUProcRenderPassEncoderSetPushConstants = void function(WGPURenderPassEncoder encoder, WGPUShaderStage stages, uint offset, uint sizeBytes, const(void)* data);
-alias WGPUProcComputePassEncoderSetPushConstants = void function(WGPUComputePassEncoder encoder, uint offset, uint sizeBytes, const(void)* data);
-alias WGPUProcRenderBundleEncoderSetPushConstants = void function(WGPURenderBundleEncoder encoder, WGPUShaderStage stages, uint offset, uint sizeBytes, const(void)* data);
-alias WGPUProcRenderPassEncoderMultiDrawIndirect = void function(WGPURenderPassEncoder encoder, WGPUBuffer buffer, ulong offset, uint count);
-alias WGPUProcRenderPassEncoderMultiDrawIndexedIndirect = void function(WGPURenderPassEncoder encoder, WGPUBuffer buffer, ulong offset, uint count);
-alias WGPUProcRenderPassEncoderMultiDrawIndirectCount = void function(WGPURenderPassEncoder encoder, WGPUBuffer buffer, ulong offset, WGPUBuffer count_buffer, ulong count_buffer_offset, uint max_count);
-alias WGPUProcRenderPassEncoderMultiDrawIndexedIndirectCount = void function(WGPURenderPassEncoder encoder, WGPUBuffer buffer, ulong offset, WGPUBuffer count_buffer, ulong count_buffer_offset, uint max_count);
-alias WGPUProcComputePassEncoderBeginPipelineStatisticsQuery = void function(WGPUComputePassEncoder computePassEncoder, WGPUQuerySet querySet, uint queryIndex);
-alias WGPUProcComputePassEncoderEndPipelineStatisticsQuery = void function(WGPUComputePassEncoder computePassEncoder);
-alias WGPUProcRenderPassEncoderBeginPipelineStatisticsQuery = void function(WGPURenderPassEncoder renderPassEncoder, WGPUQuerySet querySet, uint queryIndex);
-alias WGPUProcRenderPassEncoderEndPipelineStatisticsQuery = void function(WGPURenderPassEncoder renderPassEncoder);
-alias WGPUProcComputePassEncoderWriteTimestamp = void function(WGPUComputePassEncoder computePassEncoder, WGPUQuerySet querySet, uint queryIndex);
-alias WGPUProcRenderPassEncoderWriteTimestamp = void function(WGPURenderPassEncoder renderPassEncoder, WGPUQuerySet querySet, uint queryIndex);

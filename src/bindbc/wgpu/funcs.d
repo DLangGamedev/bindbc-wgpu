@@ -27,13 +27,8 @@ DEALINGS IN THE SOFTWARE.
 */
 module bindbc.wgpu.funcs;
 
-import core.stdc.stdint;
-import bindbc.wgpu.types;
-import bindbc.wgpu.types2;
+import bindbc.wgpu.c.proc;
 
-/*
- * Function definitions from webgpu.h
- */
 __gshared
 {
     WGPUProcCreateInstance wgpuCreateInstance;
@@ -278,7 +273,7 @@ __gshared
     WGPUProcTextureViewAddRef wgpuTextureViewAddRef;
     WGPUProcTextureViewRelease wgpuTextureViewRelease;
 
-    //
+    // Methods from wgpu.h
     WGPUProcGenerateReport wgpuGenerateReport;
     WGPUProcInstanceEnumerateAdapters wgpuInstanceEnumerateAdapters;
     WGPUProcQueueSubmitForIndex wgpuQueueSubmitForIndex;
