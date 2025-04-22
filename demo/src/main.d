@@ -337,14 +337,8 @@ void main(string[] args)
                     wgpuTextureRelease(surfaceTexture.texture);
                 configureSurface(winWidth, winHeight);
                 continue;
-            case WGPUSurfaceGetCurrentTextureStatus.OutOfMemory,
-                 WGPUSurfaceGetCurrentTextureStatus.DeviceLost,
-                 WGPUSurfaceGetCurrentTextureStatus.Force32:
-                // Fatal error
-                writeln("Error: surfaceTexture.status = ", surfaceTexture.status);
-                running = false;
-                continue;
             default:
+                // Fatal error
                 writeln("Error: surfaceTexture.status = ", surfaceTexture.status);
                 running = false;
                 continue;
