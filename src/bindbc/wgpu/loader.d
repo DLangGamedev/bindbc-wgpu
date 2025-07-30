@@ -36,7 +36,7 @@ enum WGPUSupport
 {
     noLibrary,
     badLibrary,
-    wgpu24
+    wgpu25
 }
 
 private
@@ -119,7 +119,7 @@ WGPUSupport loadWGPU(const(char)* libName)
                 __traits(getMember, bindbc.wgpu.funcs, symbol).stringof);
     }
     
-    loadedVersion = WGPUSupport.wgpu24;
+    loadedVersion = WGPUSupport.wgpu25;
     
     if (errorCount() != errCount)
         return WGPUSupport.badLibrary;
