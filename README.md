@@ -3,7 +3,7 @@
 # bindbc-wgpu
 Dynamic binding to [gfx-rs/wgpu-native](https://github.com/gfx-rs/wgpu-native) based on [BindBC](https://github.com/BindBC/bindbc-loader) library loader. Supports Windows, Linux and macOS.
 
-> WebGPU specification is currently a working draft and not a standard yet. This binding may be not up to date with latest API revisions.
+> WebGPU specification is currently a Candidate Recommendation Draft and not a W3C standard yet. API may change and break backward compatibility; use at your own risk. This binding may be not up to date with latest API revisions.
 
 Usage:
 ```
