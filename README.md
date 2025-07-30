@@ -1,7 +1,7 @@
 [![DUB Package](https://img.shields.io/dub/v/bindbc-wgpu.svg)](https://code.dlang.org/packages/bindbc-wgpu)
 
 # bindbc-wgpu
-Dynamic binding to [gfx-rs/wgpu-native](https://github.com/gfx-rs/wgpu-native) based on [BindBC](https://github.com/BindBC/bindbc-loader) library loader. Supports Windows, Linux and macOS.
+Dynamic binding to [gfx-rs/wgpu-native](https://github.com/gfx-rs/wgpu-native) for the D language based on [BindBC](https://github.com/BindBC/bindbc-loader) library loader. Supports Windows, Linux and macOS.
 
 > WebGPU specification is currently a Candidate Recommendation Draft and not a W3C standard yet. API may change and break backward compatibility; use at your own risk. This binding may be not up to date with latest API revisions.
 
