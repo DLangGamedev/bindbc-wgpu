@@ -38,7 +38,7 @@ enum WGPUNativeSType
     DeviceExtras = 0x00030001,
     NativeLimits = 0x00030002,
     PipelineLayoutExtras = 0x00030003,
-    ShaderModuleGLSLDescriptor = 0x00030004,
+    ShaderSourceGLSL = 0x00030004,
     InstanceExtras = 0x00030006,
     BindGroupEntryExtras = 0x00030007,
     BindGroupLayoutEntryExtras = 0x00030008,
@@ -155,6 +155,26 @@ enum WGPUNativeQueryType
     Force32 = 0x7FFFFFFF
 }
 
+enum WGPUDxcMaxShaderModel
+{
+    V6_0 = 0x00000000,
+    V6_1 = 0x00000001,
+    V6_2 = 0x00000002,
+    V6_3 = 0x00000003,
+    V6_4 = 0x00000004,
+    V6_5 = 0x00000005,
+    V6_6 = 0x00000006,
+    V6_7 = 0x00000007,
+    Force32 = 0x7FFFFFFF
+}
+
+enum WGPUGLFenceBehaviour
+{
+    Normal = 0x00000000,
+    AutoFinish = 0x00000001,
+    Force32 = 0x7FFFFFFF
+}
+
 struct WGPUInstanceExtras
 {
     WGPUChainedStruct chain;
@@ -162,8 +182,10 @@ struct WGPUInstanceExtras
     WGPUInstanceFlag flags;
     WGPUDx12Compiler dx12ShaderCompiler;
     WGPUGles3MinorVersion gles3MinorVersion;
+    WGPUGLFenceBehaviour glFenceBehaviour;
     WGPUStringView dxilPath;
     WGPUStringView dxcPath;
+    WGPUDxcMaxShaderModel dxcMaxShaderModel;
 }
 
 struct WGPUDeviceExtras
@@ -201,7 +223,7 @@ struct WGPUShaderDefine
     WGPUStringView value;
 }
 
-struct WGPUShaderModuleGLSLDescriptor
+struct WGPUShaderSourceGLSL
 {
     WGPUChainedStruct chain;
     WGPUShaderStage stage;
