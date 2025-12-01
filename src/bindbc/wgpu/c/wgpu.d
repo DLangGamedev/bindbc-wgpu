@@ -44,6 +44,8 @@ enum WGPUNativeSType
     BindGroupLayoutEntryExtras = 0x00030008,
     QuerySetDescriptorExtras = 0x00030009,
     SurfaceConfigurationExtras = 0x0003000A,
+    SurfaceSourceSwapChainPanel = 0x0003000B,
+    PrimitiveStateExtras = 0x0003000C,
     Force32 = 0x7FFFFFFF
 }
 
@@ -51,7 +53,6 @@ enum WGPUNativeFeature
 {
     PushConstants = 0x00030001,
     TextureAdapterSpecificFormatFeatures = 0x00030002,
-    MultiDrawIndirect = 0x00030003,
     MultiDrawIndirectCount = 0x00030004,
     VertexWritableStorage = 0x00030005,
     TextureBindingArray = 0x00030006,
@@ -67,15 +68,14 @@ enum WGPUNativeFeature
     // TODO: requires wgpu.h api change
     // AddressModeClampToZero = 0x00030011,
     // AddressModeClampToBorder = 0x00030012,
-    // PolygonModeLine = 0x00030013,
-    // PolygonModePoint = 0x00030014,
-    // ConservativeRasterization = 0x00030015,
+    PolygonModeLine = 0x00030013,
+    PolygonModePoint = 0x00030014,
+    ConservativeRasterization = 0x00030015,
     // ClearTexture = 0x00030016,
     SpirvShaderPassthrough = 0x00030017,
     // Multiview = 0x00030018,
     VertexAttribute64bit = 0x00030019,
     TextureFormatNv12 = 0x0003001A,
-    RayTracingAccelerationStructure = 0x0003001B,
     RayQuery = 0x0003001C,
     ShaderF64 = 0x0003001D,
     ShaderI16 = 0x0003001E,
@@ -86,6 +86,7 @@ enum WGPUNativeFeature
     SubgroupBarrier = 0x00030023,
     TimestampQueryInsideEncoders = 0x00030024,
     TimestampQueryInsidePasses = 0x00030025,
+    ShaderInt64 = 0x00030026,
     Force32 = 0x7FFFFFFF
 }
 
@@ -183,9 +184,10 @@ struct WGPUInstanceExtras
     WGPUDx12Compiler dx12ShaderCompiler;
     WGPUGles3MinorVersion gles3MinorVersion;
     WGPUGLFenceBehaviour glFenceBehaviour;
-    WGPUStringView dxilPath;
     WGPUStringView dxcPath;
     WGPUDxcMaxShaderModel dxcMaxShaderModel;
+    const(ubyte)* budgetForDeviceCreation;
+    const(ubyte)* budgetForDeviceLoss;
 }
 
 struct WGPUDeviceExtras
@@ -310,6 +312,26 @@ struct WGPUSurfaceConfigurationExtras
     uint desiredMaximumFrameLatency;
 }
 
+struct WGPUSurfaceSourceSwapChainPanel
+{
+    WGPUChainedStruct chain;
+    void* panelNative;
+}
+
+enum WGPUPolygonMode
+{
+    Fill = 0,
+    Line = 1,
+    Point = 2
+}
+
+struct WGPUPrimitiveStateExtras
+{
+    WGPUChainedStruct chain;
+    WGPUPolygonMode polygonMode;
+    WGPUBool conservative;
+}
+
 extern(C)
 {
     alias WGPULogCallback = void function(WGPULogLevel level, WGPUStringView message, void* userdata);
@@ -323,5 +345,6 @@ enum WGPUNativeTextureFormat
     Rg16Snorm = 0x00030004,
     Rgba16Unorm = 0x00030005,
     Rgba16Snorm = 0x00030006,
-    NV12 = 0x00030007
+    NV12 = 0x00030007,
+    P010 = 0x00030008
 }

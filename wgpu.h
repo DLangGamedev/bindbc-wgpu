@@ -14,13 +14,14 @@ typedef enum WGPUNativeSType {
     WGPUSType_BindGroupLayoutEntryExtras = 0x00030008,
     WGPUSType_QuerySetDescriptorExtras = 0x00030009,
     WGPUSType_SurfaceConfigurationExtras = 0x0003000A,
+    WGPUSType_SurfaceSourceSwapChainPanel = 0x0003000B,
+    WGPUSType_PrimitiveStateExtras = 0x0003000C,
     WGPUNativeSType_Force32 = 0x7FFFFFFF
 } WGPUNativeSType;
 
 typedef enum WGPUNativeFeature {
     WGPUNativeFeature_PushConstants = 0x00030001,
     WGPUNativeFeature_TextureAdapterSpecificFormatFeatures = 0x00030002,
-    WGPUNativeFeature_MultiDrawIndirect = 0x00030003,
     WGPUNativeFeature_MultiDrawIndirectCount = 0x00030004,
     WGPUNativeFeature_VertexWritableStorage = 0x00030005,
     WGPUNativeFeature_TextureBindingArray = 0x00030006,
@@ -36,15 +37,14 @@ typedef enum WGPUNativeFeature {
     // TODO: requires wgpu.h api change
     // WGPUNativeFeature_AddressModeClampToZero = 0x00030011,
     // WGPUNativeFeature_AddressModeClampToBorder = 0x00030012,
-    // WGPUNativeFeature_PolygonModeLine = 0x00030013,
-    // WGPUNativeFeature_PolygonModePoint = 0x00030014,
-    // WGPUNativeFeature_ConservativeRasterization = 0x00030015,
+    WGPUNativeFeature_PolygonModeLine = 0x00030013,
+    WGPUNativeFeature_PolygonModePoint = 0x00030014,
+    WGPUNativeFeature_ConservativeRasterization = 0x00030015,
     // WGPUNativeFeature_ClearTexture = 0x00030016,
     WGPUNativeFeature_SpirvShaderPassthrough = 0x00030017,
     // WGPUNativeFeature_Multiview = 0x00030018,
     WGPUNativeFeature_VertexAttribute64bit = 0x00030019,
     WGPUNativeFeature_TextureFormatNv12 = 0x0003001A,
-    WGPUNativeFeature_RayTracingAccelerationStructure = 0x0003001B,
     WGPUNativeFeature_RayQuery = 0x0003001C,
     WGPUNativeFeature_ShaderF64 = 0x0003001D,
     WGPUNativeFeature_ShaderI16 = 0x0003001E,
@@ -55,6 +55,7 @@ typedef enum WGPUNativeFeature {
     WGPUNativeFeature_SubgroupBarrier = 0x00030023,
     WGPUNativeFeature_TimestampQueryInsideEncoders = 0x00030024,
     WGPUNativeFeature_TimestampQueryInsidePasses = 0x00030025,
+    WGPUNativeFeature_ShaderInt64 = 0x00030026,
     WGPUNativeFeature_Force32 = 0x7FFFFFFF
 } WGPUNativeFeature;
 
@@ -143,9 +144,11 @@ typedef struct WGPUInstanceExtras {
     WGPUDx12Compiler dx12ShaderCompiler;
     WGPUGles3MinorVersion gles3MinorVersion;
     WGPUGLFenceBehaviour glFenceBehaviour;
-    WGPUStringView dxilPath;
     WGPUStringView dxcPath;
     WGPUDxcMaxShaderModel dxcMaxShaderModel;
+
+    WGPU_NULLABLE const uint8_t* budgetForDeviceCreation;
+    WGPU_NULLABLE const uint8_t* budgetForDeviceLoss;
 } WGPUInstanceExtras;
 
 typedef struct WGPUDeviceExtras {
@@ -256,6 +259,30 @@ typedef struct WGPUSurfaceConfigurationExtras {
     uint32_t desiredMaximumFrameLatency;
 } WGPUSurfaceConfigurationExtras WGPU_STRUCTURE_ATTRIBUTE;
 
+/**
+* Chained in @ref WGPUSurfaceDescriptor to make a @ref WGPUSurface wrapping a WinUI [`SwapChainPanel`](https://learn.microsoft.com/en-us/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.controls.swapchainpanel).
+*/
+typedef struct WGPUSurfaceSourceSwapChainPanel {
+    WGPUChainedStruct chain;
+    /**
+    * A pointer to the [`ISwapChainPanelNative`](https://learn.microsoft.com/en-us/windows/windows-app-sdk/api/win32/microsoft.ui.xaml.media.dxinterop/nn-microsoft-ui-xaml-media-dxinterop-iswapchainpanelnative)
+    * interface of the SwapChainPanel that will be wrapped by the @ref WGPUSurface.
+    */
+    void * panelNative;
+} WGPUSurfaceSourceSwapChainPanel WGPU_STRUCTURE_ATTRIBUTE;
+
+typedef enum WGPUPolygonMode {
+    WGPUPolygonMode_Fill = 0,
+    WGPUPolygonMode_Line = 1,
+    WGPUPolygonMode_Point = 2,
+} WGPUPolygonMode;
+
+typedef struct WGPUPrimitiveStateExtras {
+    WGPUChainedStruct chain;
+    WGPUPolygonMode polygonMode;
+    WGPUBool conservative;
+} WGPUPrimitiveStateExtras WGPU_STRUCTURE_ATTRIBUTE;
+
 typedef void (*WGPULogCallback)(WGPULogLevel level, WGPUStringView message, void * userdata);
 
 typedef enum WGPUNativeTextureFormat {
@@ -268,7 +295,9 @@ typedef enum WGPUNativeTextureFormat {
     WGPUNativeTextureFormat_Rgba16Snorm = 0x00030006,
     // From Features::TEXTURE_FORMAT_NV12
     WGPUNativeTextureFormat_NV12 = 0x00030007,
+    WGPUNativeTextureFormat_P010 = 0x00030008,
 } WGPUNativeTextureFormat;
+
 
 #ifdef __cplusplus
 extern "C" {

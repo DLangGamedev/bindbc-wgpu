@@ -8,7 +8,7 @@ Dynamic binding to [gfx-rs/wgpu-native](https://github.com/gfx-rs/wgpu-native) f
 Usage:
 ```
 "dependencies": {
-    "bindbc-wgpu": "0.25.0"
+    "bindbc-wgpu": "0.27.0"
 }
 ```
 
